@@ -18,7 +18,7 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-
+import openpyxl
 
 def rand_matrix(n, min_val = 1, max_val = 100):
     # Essa função retorna uma matriz vazia de ordem 'n', com limites definidos como padrão 0 e 20.
@@ -47,12 +47,13 @@ def traditional_multiplication(n):
         matrizRes = np.zeros((ordem, ordem))
 
         # O produto
-        startTime = time.time()
+        startTime = time.perf_counter()
         for i in range(ordem):
             for j in range(ordem):
                 for k in range(ordem):
                     matrizRes[i][j] += matrizA[i][k] * matrizB[k][j]
-        finalTime = time.time()
+
+        finalTime = time.perf_counter()
 
         execution_times.append(finalTime - startTime)
 
@@ -94,13 +95,9 @@ def optimized_multiplication(n):
         # Matriz resultado
         matrizRes = np.zeros((ordem, ordem))
 
-        startTime = time.time()
-        for i in range(ordem):
-            for j in range(ordem):
-                for k in range(ordem // 2):
-                    matrizRes[i][j] += matrizA[i][k] * matrizB[k][j]
-                    matrizRes[i][j] += matrizA[i][ordem - k - 1] * matrizB[ordem - k - 1][j]
-        finalTime = time.time()
+        startTime = time.perf_counter()
+        matrizRes = np.dot(matrizA, matrizB)  # Utiliza a multiplicação de matrizes do NumPy
+        finalTime = time.perf_counter()
 
         execution_times.append(finalTime - startTime)
 
@@ -141,11 +138,13 @@ Professor: André Chaves
         file.write(report_content)
 
     # Inicializa as variáveis do algorítmo
-    n = 50
+    n = 10
 
     traditional_times = traditional_multiplication(n)
     optimized_times = optimized_multiplication(n)
 
+    print(traditional_times)
+    print(optimized_times)
     # Gerar gráfico
     plt.plot(range(1, n + 1), traditional_times, label='Multiplicação Tradicional')
     plt.plot(range(1, n + 1), optimized_times, label='Multiplicação Otimizada')
@@ -156,6 +155,20 @@ Professor: André Chaves
     plt.savefig("Atividade_1.png")
     plt.show()
     
+    # Escrever tempos de execução em um arquivo Excel
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Tempos de Execução"
+    ws['A1'] = "n"
+    ws['B1'] = "Tempo Tradicional (s)"
+    ws['C1'] = "Tempo Otimizado (s)"
+    for i in range(1, n + 1):
+        ws[f'A{i+1}'] = i
+        ws[f'B{i+1}'].value = float(format(traditional_times[i-1], '.15f'))
+        ws[f'B{i+1}'].number_format = '_(* #,##0.0000000000000000_);_(* (#,##0.0000000000000000);_(* "-"??_);_(@_)'
+        ws[f'C{i+1}'].value = float(format(optimized_times[i-1], '.15f'))
+        ws[f'C{i+1}'].number_format = '_(* #,##0.0000000000000000_);_(* (#,##0.0000000000000000);_(* "-"??_);_(@_)'
+    wb.save("tempos_execucao.xlsx")
 
 if __name__ == '__main__':
     main()
