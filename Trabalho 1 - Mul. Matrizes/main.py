@@ -20,6 +20,10 @@ Realizar analise empírica para cada algoritmo:
 
 O código irá gerar um PNG com o gráfico contendo as informações de performances
 '''
+#Variáveis
+range_Numeros = 10
+range_Ordem = 1024
+
 # Decorator de cálculo de tempo gasto
 gasto = {}
 def tempo_gastado(func):
@@ -126,6 +130,24 @@ def strassen_multiplicacao(A, B):
     return C_padded[:A.shape[0], :B.shape[1]]
 
 
+def gerarGrafico(ordem):
+    # Gerar gráfico de custo
+    fig, ax = plt.subplots()
+    # Plota os dados para o algoritmo 1
+    ax.plot(range(1, ordem + 1), gasto['matriz_multiplicacao'], marker='o', label='Método Tradicional', color='blue')
+
+    # Plota os dados para o algoritmo 2
+    ax.plot(range(1, ordem + 1), gasto['strassen_multiplicacao'], marker='o', label='Algorítmo de Strassen', color='orange')
+
+    # Adicionando título e rótulos
+    ax.set_title('Comparação de Eficiência entre Algoritmos')
+    ax.set_xlabel('Tamanho da Matriz')
+    ax.set_ylabel('Tempo Gasto (segundos)')
+
+    ax.legend()
+    ax.grid(True)
+    fig.savefig(os.path.join(os.path.dirname(__file__), f"grafico_custo_algoritmos_{ordem}.png"))
+
 
 if __name__ == "__main__":
     import numpy as np
@@ -133,10 +155,6 @@ if __name__ == "__main__":
     from mpl_interactions import zoom_factory, panhandler
     from tqdm import tqdm
     import os
-
-    #Variáveis
-    range_Numeros = 10
-    range_Ordem = 20
 
     for ordem in tqdm(range(1, range_Ordem + 1), desc="Iterando sobre ordens"):
         # Criar ou abrir um arquivo para registrar os dados
@@ -163,26 +181,5 @@ if __name__ == "__main__":
             # Adicionar uma linha em branco para melhor legibilidade
             file.write("\n" + "="*40 + "\n\n")
 
-    # Gerar gráfico de custo
-    fig, ax = plt.subplots()
-    # Plota os dados para o algoritmo 1
-    ax.plot(range(1, range_Ordem + 1), gasto['matriz_multiplicacao'], marker='o', label='Método Tradicional', color='blue')
-
-    # Plota os dados para o algoritmo 2
-    ax.plot(range(1, range_Ordem + 1), gasto['strassen_multiplicacao'], marker='o', label='Algorítmo de Strassen', color='orange')
-
-    # Adicionando título e rótulos
-    ax.set_title('Comparação de Eficiência entre Algoritmos')
-    ax.set_xlabel('Tamanho da Matriz')
-    ax.set_ylabel('Tempo Gasto (segundos)')
-
-    ax.legend()
-    ax.grid(True)
-    fig.savefig(os.path.join(os.path.dirname(__file__), "grafico_custo_algoritmos.png"))
-
-    # Habilitar zoom e pan
-    zoom_factory(ax)
-    pan_handler = panhandler(fig)
-
-    plt.show()
-    
+        if ordem % 25 == 0:
+            gerarGrafico(ordem)
