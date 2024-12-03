@@ -22,7 +22,7 @@ O código irá gerar um PNG com o gráfico contendo as informações de performa
 '''
 #Variáveis
 range_Numeros = 10
-range_Ordem = 1024
+range_Ordem = 50
 
 # Decorator de cálculo de tempo gasto
 gasto = {}
@@ -34,18 +34,22 @@ def tempo_gastado(func):
         result = func(*args, **kwargs)  # Chama a função decorada
         fim = time.perf_counter()  # Para a contagem do tempo
 
-        # Armazena o tempo gasto junto com o nome da função
+
         if func.__name__ not in gasto:
-            gasto[func.__name__] = []  # Cria uma nova lista se a chave não existir
-        gasto[func.__name__].append(fim - inicio)  # Adiciona o tempo à lista
+            gasto[func.__name__] = {'tempo': [], 'operacoes': 0} 
         
-        return result  # Retorna o resultado da função
+        gasto[func.__name__]['tempo'].append(fim - inicio)
+        
+        if isinstance(result, tuple):
+            count = result[1]  
+            gasto[func.__name__]['operacoes'] += count
+
+        return result
     return wrapper
-
-
 
 @tempo_gastado
 def matriz_multiplicacao(A, B):
+    count = 0
     # Verifica se as dimensões são compatíveis
     if A.shape[1] != B.shape[0]:
         raise ValueError("O número de colunas de A deve ser igual ao número de linhas de B.")
@@ -57,11 +61,14 @@ def matriz_multiplicacao(A, B):
 
     # Realiza a multiplicação
     for i in range(m):
+        count += 1
         for j in range(p):
+            count += 1
             for k in range(n):
+                count += 1
                 C[i, j] += A[i, k] * B[k, j]
 
-    return C
+    return C, count
 
 
 
@@ -119,6 +126,7 @@ def strassen(A, B):
 
 @tempo_gastado
 def strassen_multiplicacao(A, B):
+    count = 7
     # Preencher as matrizes com zeros para torná-las potências de 2
     A_padded = pad_matrix(A)
     B_padded = pad_matrix(B)
@@ -127,17 +135,17 @@ def strassen_multiplicacao(A, B):
     C_padded = strassen(A_padded, B_padded)
 
     # Retornar a parte relevante da matriz resultante
-    return C_padded[:A.shape[0], :B.shape[1]]
+    return C_padded[:A.shape[0], :B.shape[1]], count
 
 
 def gerarGrafico(ordem):
     # Gerar gráfico de custo
     fig, ax = plt.subplots()
     # Plota os dados para o algoritmo 1
-    ax.plot(range(1, ordem + 1), gasto['matriz_multiplicacao'], marker='o', label='Método Tradicional', color='blue')
+    ax.plot(range(1, ordem + 1), gasto['matriz_multiplicacao']['tempo'], marker='o', label='Método Tradicional', color='blue')
 
     # Plota os dados para o algoritmo 2
-    ax.plot(range(1, ordem + 1), gasto['strassen_multiplicacao'], marker='o', label='Algorítmo de Strassen', color='orange')
+    ax.plot(range(1, ordem + 1), gasto['strassen_multiplicacao']['tempo'], marker='o', label='Algorítmo de Strassen', color='orange')
 
     # Adicionando título e rótulos
     ax.set_title('Comparação de Eficiência entre Algoritmos')
@@ -146,7 +154,7 @@ def gerarGrafico(ordem):
 
     ax.legend()
     ax.grid(True)
-    fig.savefig(os.path.join(os.path.dirname(__file__), f"grafico_custo_algoritmos_{ordem}.png"))
+    fig.savefig(os.path.join(os.path.dirname(__file__), f"grafico_custo_algoritmos_{ordem}_test.png"))
 
 
 if __name__ == "__main__":
@@ -158,7 +166,7 @@ if __name__ == "__main__":
 
     for ordem in tqdm(range(1, range_Ordem + 1), desc="Iterando sobre ordens"):
         # Criar ou abrir um arquivo para registrar os dados
-        with open(f"{os.path.join(os.path.dirname(__file__))}/registro_multiplicacao.txt", "a") as file:
+        with open(f"{os.path.join(os.path.dirname(__file__))}/registro_multiplicacao_test.txt", "a") as file:
             # Escrever a ordem
             file.write(f"Ordem: {ordem}\n")
             
@@ -168,15 +176,21 @@ if __name__ == "__main__":
             
             # Escrever as matrizes A e B
             file.write(f"Matriz A:\n{matriz_A}\n")
-            file.write(f"Matriz B:\n{matriz_B}\n")
+            file.write(f"Matriz B:\n{matriz_B}\n\n")
             
             # Calcular os resultados
-            resultado_tradicional = matriz_multiplicacao(matriz_A, matriz_B).astype(int)
-            resultado_strassen = strassen_multiplicacao(matriz_A, matriz_B).astype(int)
+            resultado_tradicional = matriz_multiplicacao(matriz_A, matriz_B)[0]
+            resultado_tradicional = resultado_tradicional.astype(int)
+            resultado_strassen = strassen_multiplicacao(matriz_A, matriz_B)[0]
+            resultado_strassen = resultado_strassen.astype(int)
             
             # Escrever os resultados
             file.write(f"Resultado (Método Tradicional):\n{resultado_tradicional}\n")
+            file.write(f"Tempo: {gasto['matriz_multiplicacao']['tempo'][ordem - 1]:.8f}\n")
+            file.write(f"Operações: {gasto['matriz_multiplicacao']['operacoes']}\n\n")
             file.write(f"Resultado (Algoritmo de Strassen):\n{resultado_strassen}\n")
+            file.write(f"Tempo: {gasto['strassen_multiplicacao']['tempo'][ordem - 1]:.8f}\n")
+            file.write(f"Operações: {gasto['strassen_multiplicacao']['operacoes']}\n\n")
             
             # Adicionar uma linha em branco para melhor legibilidade
             file.write("\n" + "="*40 + "\n\n")
