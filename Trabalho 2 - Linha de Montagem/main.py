@@ -22,12 +22,6 @@ def tempo_gastado(func):
 import random
 
 def gerar_tempos(n):
-    """
-    Gera aleatoriamente os tempos nas estações e de transferência para um dado N.
-    Retorna:
-    - a: matriz 2xN com tempos nas estações
-    - t: matriz 2x(N-1) com tempos de transferência entre linhas
-    """
     a = [[random.randint(1, 10) for _ in range(n)],  # Linha 1
          [random.randint(1, 10) for _ in range(n)]]  # Linha 2
     t = [[random.randint(1, 10) for _ in range(n - 1)],  # Transferência da linha 1 para 2
@@ -43,31 +37,22 @@ def linha_de_montagem(n, a, t, e, x):
     e  -> Tempo de entrada nas linhas (lista de tamanho 2)
     x  -> Tempo de saída das linhas (lista de tamanho 2)
     """
-    # Inicializando as tabelas de tempo mínimo
+
     f1 = [0] * n
     f2 = [0] * n
 
-    # Condições iniciais
     f1[0] = e[0] + a[0][0]
     f2[0] = e[1] + a[1][0]
 
-    # Preenchendo as tabelas usando as relações de recorrência
     for j in range(1, n):
         f1[j] = min(f1[j-1] + a[0][j], f2[j-1] + t[1][j-1] + a[0][j])
         f2[j] = min(f2[j-1] + a[1][j], f1[j-1] + t[0][j-1] + a[1][j])
 
-    # Resultado final considerando o tempo de saída
     return min(f1[n-1] + x[0], f2[n-1] + x[1])
 
 @tempo_gastado
 def linha_de_montagem_forca_bruta(n, a, t, e, x):
-    """
-    n  -> Número de estações por linha
-    a  -> Tempo nas estações (matriz 2xN)
-    t  -> Tempo de transferência entre linhas (matriz 2x(N-1))
-    e  -> Tempo de entrada nas linhas (lista de tamanho 2)
-    x  -> Tempo de saída das linhas (lista de tamanho 2)
-    """
+    
     tempo_minimo = float('inf')  # Inicializar o tempo mínimo como infinito
     total_combinacoes = 2 ** n   # Número total de combinações (2^n)
 
@@ -115,7 +100,7 @@ def gerarGrafico(ordem):
 
     # Adicionando título e rótulos
     ax.set_title('Comparação de Eficiência entre Algoritmos')
-    ax.set_xlabel('Tamanho da Matriz')
+    ax.set_xlabel('Tamanho de n')
     ax.set_ylabel('Tempo Gasto (segundos)')
 
     ax.legend()
@@ -139,5 +124,4 @@ if __name__ == "__main__":
         print(f"Com {n} estações: PD = {tempo_pd}, Força Bruta = {tempo_fb}")
 
     # Gerar gráfico de custo
-    print(gasto)
     gerarGrafico(N_max)
