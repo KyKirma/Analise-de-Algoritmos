@@ -53,24 +53,22 @@ def linha_de_montagem(n, a, t, e, x):
 @tempo_gastado
 def linha_de_montagem_forca_bruta(n, a, t, e, x):
     
-    tempo_minimo = float('inf')  # Inicializar o tempo mínimo como infinito
-    total_combinacoes = 2 ** n   # Número total de combinações (2^n)
+    tempo_minimo = float('inf')
+    total_combinacoes = 2 ** n 
 
-    # Gerar todas as combinações usando números binários de 0 a 2^n - 1
+    
     for combinacao in range(total_combinacoes):
         caminho = []  # Caminho atual (lista de linhas)
         num = combinacao
 
-        # Gerar o caminho binário correspondente ao número
         for _ in range(n):
             caminho.append(num % 2)  # Adiciona 0 (linha L1) ou 1 (linha L2)
             num //= 2
-        caminho.reverse()  # Reverter para ter a ordem correta das estações
+        caminho.reverse()
 
         tempo_total = 0
         linha_atual = caminho[0]
-
-        # Adicionar o tempo de entrada
+        
         tempo_total += e[linha_atual] + a[linha_atual][0]
 
         # Percorrer as estações
@@ -81,10 +79,8 @@ def linha_de_montagem_forca_bruta(n, a, t, e, x):
                 tempo_total += t[linha_atual][j-1]
             linha_atual = proxima_linha
 
-        # Adicionar o tempo de saída
         tempo_total += x[linha_atual]
 
-        # Atualizar o tempo mínimo se necessário
         tempo_minimo = min(tempo_minimo, tempo_total)
 
     return tempo_minimo
